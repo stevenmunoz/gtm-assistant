@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Action Buttons</title>
+    <style type="text/css">
+        /* Reset styles for email clients */
+        body {
+            margin: 0;
+            padding: 0;
+            min-width: 100%;
+            width: 100% !important;
+            height: 100% !important;
+        }
+        
+        @media only screen and (max-width: 480px) {
+            .mobile-links td {
+                display: block !important;
+                width: 100% !important;
+                text-align: left !important;
+                padding: 10px 0 !important;
+            }
+            .mobile-links td a {
+                margin: 0 !important;
+                padding-left: 12px !important;
+                display: inline-block !important;
+            }
+            .container {
+                width: 100% !important;
+            }
+        }
+    </style>
+</head>
+<body style="margin: 0; padding: 0;">
+    <table role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;">
+        <tr>
+            <td>
+                <!-- Main Container -->
+                <table role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse; max-width: 600px; margin: 0 auto;" class="container">
+                    <tr>
+                        <td style="padding: 20px 0;">
+                            <table role="presentation" cellpadding="0" cellspacing="0" width="100%" border="0" style="border-collapse: collapse;" class="mobile-links">
+                                <tr>
+                                    <td style="padding: 0 0 0 12px;">
+                                        <a href="{{ModifyURL}}" style="color: #055f81; font-family: Arial, sans-serif; font-size: 14px; text-decoration: underline; margin-right: 20px; font-weight: bold;">Modify</a>
+                                        <a href="{{CancelURL}}" style="color: #CE1126; font-family: Arial, sans-serif; font-size: 14px; text-decoration: underline; font-weight: bold;">Cancel</a>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </td>
+        </tr>
+    </table>
+</body>
+</html>

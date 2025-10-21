@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FreePour Analysis Charts</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .chart-container {
+            background: white;
+            margin: 30px 0;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        .chart-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: #2c3e50;
+        }
+        canvas {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        .download-btn {
+            margin-top: 15px;
+            padding: 10px 20px;
+            background: #3498db;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        .download-btn:hover {
+            background: #2980b9;
+        }
+        .instructions {
+            background: #e8f4f8;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            color: #2c3e50;
+        }
+    </style>
+</head>
+<body>
+    <div class="instructions">
+        <strong>Instructions:</strong> Right-click on each chart and select "Save image as..." to download, or use the download buttons below each chart.
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Resource Allocation by Stream</div>
+        <canvas id="chart1" width="600" height="400"></canvas>
+        <button class="download-btn" onclick="downloadChart('chart1', 'resource-allocation')">Download Chart 1</button>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Work Type Analysis: Strategic vs Maintenance Work</div>
+        <canvas id="chart2" width="600" height="400"></canvas>
+        <button class="download-btn" onclick="downloadChart('chart2', 'work-type-analysis')">Download Chart 2</button>
+    </div>
+
+    <div class="chart-container">
+        <div class="chart-title">Native App Resource Impact</div>
+        <canvas id="chart3" width="600" height="400"></canvas>
+        <button class="download-btn" onclick="downloadChart('chart3', 'native-app-impact')">Download Chart 3</button>
+    </div>
+
+    <script>
+        // Chart 1: Resource Distribution Pie Chart
+        const ctx1 = document.getElementById('chart1').getContext('2d');
+        const chart1 = new Chart(ctx1, {
+            type: 'doughnut',
+            data: {
+                labels: ['Web App (79%)', 'Marketing (15%)', 'Native App (6%)'],
+                datasets: [{
+                    data: [79, 15, 6],
+                    backgroundColor: ['#3498db', '#2ecc71', '#e74c3c'],
+                    borderWidth: 3,
+                    borderColor: '#ffffff'
+                }]
+            },
+            options: {
+                responsive: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.label + ': ' + context.parsed + ' issues';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 2: Work Type Stacked Bar Chart
+        const ctx2 = document.getElementById('chart2').getContext('2d');
+        const chart2 = new Chart(ctx2, {
+            type: 'bar',
+            data: {
+                labels: ['Native App', 'Marketing', 'Web App'],
+                datasets: [
+                    {
+                        label: 'Maintenance/Bugs (%)',
+                        data: [86, 56, 20],
+                        backgroundColor: '#e74c3c',
+                        borderColor: '#c0392b',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'Strategic/Features (%)',
+                        data: [14, 44, 80],
+                        backgroundColor: '#2ecc71',
+                        borderColor: '#27ae60',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: false,
+                scales: {
+                    x: {
+                        stacked: true,
+                        ticks: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    y: {
+                        stacked: true,
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            font: {
+                                size: 12
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'top',
+                        labels: {
+                            padding: 20,
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.dataset.label + ': ' + context.parsed.y + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Chart 3: Native App Impact Horizontal Bar
+        const ctx3 = document.getElementById('chart3').getContext('2d');
+        const chart3 = new Chart(ctx3, {
+            type: 'bar',
+            data: {
+                labels: ['Current Allocation', 'Maintenance Overhead', 'Strategic Value'],
+                datasets: [{
+                    label: 'Percentage',
+                    data: [6, 86, 14],
+                    backgroundColor: ['#f39c12', '#e74c3c', '#2ecc71'],
+                    borderColor: ['#e67e22', '#c0392b', '#27ae60'],
+                    borderWidth: 2
+                }]
+            },
+            options: {
+                responsive: false,
+                indexAxis: 'y',
+                scales: {
+                    x: {
+                        beginAtZero: true,
+                        max: 100,
+                        ticks: {
+                            callback: function(value) {
+                                return value + '%';
+                            },
+                            font: {
+                                size: 12
+                            }
+                        }
+                    },
+                    y: {
+                        ticks: {
+                            font: {
+                                size: 14,
+                                weight: 'bold'
+                            }
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.x + '%';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Download function
+        function downloadChart(canvasId, filename) {
+            const canvas = document.getElementById(canvasId);
+            const url = canvas.toDataURL('image/png');
+            const link = document.createElement('a');
+            link.download = filename + '.png';
+            link.href = url;
+            link.click();
+        }
+
+        // Auto-generate high-quality images after charts load
+        setTimeout(() => {
+            // Set higher DPI for better quality
+            document.querySelectorAll('canvas').forEach(canvas => {
+                const ctx = canvas.getContext('2d');
+                const dpr = window.devicePixelRatio || 1;
+                const rect = canvas.getBoundingClientRect();
+                canvas.width = rect.width * dpr;
+                canvas.height = rect.height * dpr;
+                ctx.scale(dpr, dpr);
+                canvas.style.width = rect.width + 'px';
+                canvas.style.height = rect.height + 'px';
+            });
+        }, 1000);
+    </script>
+</body>
+</html>

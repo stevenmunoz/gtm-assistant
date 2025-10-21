@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GTM Medallia User Context - Test Page</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        .success { background-color: #d4edda; border-color: #c3e6cb; }
+        .warning { background-color: #fff3cd; border-color: #ffeaa7; }
+        .error { background-color: #f8d7da; border-color: #f5c6cb; }
+        button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            margin: 5px;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background-color: #0056b3; }
+        pre {
+            background-color: #f8f9fa;
+            padding: 10px;
+            border-radius: 4px;
+            overflow-x: auto;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>GTM Medallia User Context Script - Test Suite</h1>
+        
+        <div class="test-section">
+            <h3>Current Status</h3>
+            <div id="status">Loading...</div>
+            <button onclick="checkMedalliaData()">Check Window Object</button>
+            <button onclick="clearCookies()">Clear Test Cookies</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Test Scenarios</h3>
+            
+            <h4>Test 1: Valid JWT Token</h4>
+            <button onclick="testValidToken()">Set Valid JWT Cookie</button>
+            <p>Sets a cookie with a valid JWT token containing user data</p>
+            
+            <h4>Test 2: Anonymous User (No Cookie)</h4>
+            <button onclick="testAnonymousUser()">Clear User Cookie</button>
+            <p>Simulates an anonymous user with no user-consumer cookie</p>
+            
+            <h4>Test 3: Empty Cookie Value</h4>
+            <button onclick="testEmptyCookie()">Set Empty Cookie</button>
+            <p>Tests handling of empty cookie value</p>
+            
+            <h4>Test 4: Malformed JWT Token</h4>
+            <button onclick="testMalformedToken()">Set Malformed Token</button>
+            <p>Tests handling of invalid JWT structure</p>
+            
+            <h4>Test 5: Invalid Base64 Payload</h4>
+            <button onclick="testInvalidBase64()">Set Invalid Base64</button>
+            <p>Tests handling of invalid base64 encoding in JWT payload</p>
+            
+            <h4>Test 6: Missing User Fields</h4>
+            <button onclick="testMissingFields()">Set Token with Missing Fields</button>
+            <p>Tests handling when some required fields are missing</p>
+        </div>
+
+        <div class="test-section">
+            <h3>Results</h3>
+            <div id="results">
+                <pre id="windowObject">No data available</pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Console Output</h3>
+            <p>Check browser console for any development logs or errors</p>
+        </div>
+    </div>
+
+    <script>
+        // Sample JWT tokens for testing
+        const validJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJBbGVraHlhIiwibGFzdE5hbWUiOiJEYW5kYW11ZGkiLCJlbWFpbCI6InV0ZXN0NjkwNCttdWx0aWJpbGw0QGdtYWlsLmNvbSIsIm9rdGFVaWQiOiIwMHVtY3ZpY3BQM3JZM1FxSWQ3IiwiaWQiOiI2ODhhMzc1MDYwNGFlZDg2MmNmNjNkYTEiLCJhcHBsaWNhdGlvblN0YXR1cyI6IkFQUFJPVkVEIiwiZ3JvdXBzIjpbIkFQUF9QaG9lbml4X0N1c3RvbWVycyJdfQ.FakeSignatureForTestingPurposesOnly123456';
+        
+        function checkMedalliaData() {
+            const statusDiv = document.getElementById('status');
+            const resultsDiv = document.getElementById('windowObject');
+            
+            if (window.medalliaUserData) {
+                statusDiv.innerHTML = '<span class="success">✓ medalliaUserData found in window object</span>';
+                resultsDiv.textContent = JSON.stringify(window.medalliaUserData, null, 2);
+            } else {
+                statusDiv.innerHTML = '<span class="warning">⚠ No medalliaUserData found (expected for anonymous users)</span>';
+                resultsDiv.textContent = 'No medalliaUserData object found in window';
+            }
+        }
+
+        function clearCookies() {
+            document.cookie = 'user-consumer=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            delete window.medalliaUserData;
+            location.reload();
+        }
+
+        function testValidToken() {
+            document.cookie = `user-consumer=${encodeURIComponent(validJWT)}; path=/`;
+            location.reload();
+        }
+
+        function testAnonymousUser() {
+            clearCookies();
+        }
+
+        function testEmptyCookie() {
+            document.cookie = 'user-consumer=; path=/';
+            location.reload();
+        }
+
+        function testMalformedToken() {
+            document.cookie = 'user-consumer=invalid.token; path=/';
+            location.reload();
+        }
+
+        function testInvalidBase64() {
+            document.cookie = 'user-consumer=header.invalidbase64!@#.signature; path=/';
+            location.reload();
+        }
+
+        function testMissingFields() {
+            // JWT with only firstName and email (missing lastName and oktaUid)
+            const partialJWT = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJmaXJzdE5hbWUiOiJKb2huIiwiZW1haWwiOiJqb2huQGV4YW1wbGUuY29tIn0.signature';
+            document.cookie = `user-consumer=${encodeURIComponent(partialJWT)}; path=/`;
+            location.reload();
+        }
+
+        // Initialize on page load
+        window.addEventListener('load', function() {
+            setTimeout(checkMedalliaData, 100);
+        });
+    </script>
+
+    <!-- Include the GTM Medallia script -->
+    <script src="gtm-medallia-user-context.js"></script>
+</body>
+</html>
