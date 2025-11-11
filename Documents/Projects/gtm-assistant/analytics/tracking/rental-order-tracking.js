@@ -48,7 +48,7 @@ function logFormControls(form) {
         formEntries[key] = value;
         //console.log(key + ":" + value);
     });
-    
+
     // Update storedLocationText only if the new value is not empty and is different from the stored value
     if (formEntries["location-text"] && formEntries["location-text"] !== storedLocationText) {
         storedLocationText = formEntries["location-text"];
@@ -66,7 +66,7 @@ function attachFormSubmitListener() {
         // For form with ID 'search-location'
         if (form.id === 'search-location') {
             // Capture relevant fields from the search location page
-            var vehicleTypeInput = formEntries["product"]; 
+            var vehicleTypeInput = formEntries["product"];
             var poNumberInput = formEntries["poNumber"];
             fromDate = formEntries["pickupDate"];
             untilDate = formEntries["dropOffDate"];
@@ -90,17 +90,17 @@ function attachFormSubmitListener() {
         // For form with ID 'select-location' (Next Step button clicked)
         if (form.id === 'select-location') {
             // Capture relevant fields from the select location page
-            var vehicleTypeInput = formEntries["product"]; 
+            var vehicleTypeInput = formEntries["product"];
             var poNumberInput = formEntries["poNumber"];
             fromDate = formEntries["pickupDate"];
             untilDate = formEntries["dropOffDate"];
             var quantityInput = formEntries["units"];
             var locationSelected = formEntries["locationName"];
-            var distance = formEntries["distance"];  
-           
+            var distance = formEntries["distance"];
+
             // Store quantity input for use in the confirmation step
             quantityInputValue = quantityInput;
-          
+
             // Push the data to the data layer
             dataLayer.push(Object.assign({
                 'event': 'create_rental_order_activity',
@@ -123,13 +123,21 @@ function attachFormSubmitListener() {
         if (form.id === 'order-review') {
             // Determine step based on user type and the presence of additional details
             var step = 'rental_order_review_order_page';
-           
+
             // Capture comments field for submit order
             var comments = document.querySelector('[data-testid="rental_order_leave_comments"]') ? document.querySelector('[data-testid="rental_order_leave_comments"]').value : 'none';
-            
+
+            // Capture company information fields
+            var companyName = document.querySelector('[data-testid="rental_application_company_name_input"]') ? document.querySelector('[data-testid="rental_application_company_name_input"]').value : 'none';
+            var dotNumber = document.querySelector('[data-testid="rental_application_dot_number_input"]') ? document.querySelector('[data-testid="rental_application_dot_number_input"]').value : 'none';
+            var physicalAddress = document.querySelector('[data-testid="rental_application_company_address_input"]') ? document.querySelector('[data-testid="rental_application_company_address_input"]').value : 'none';
+            var physicalAptSuite = document.querySelector('[data-testid="rental_application_company_apt_suite_input"]') ? document.querySelector('[data-testid="rental_application_company_apt_suite_input"]').value : 'none';
+            var billingAddress = document.querySelector('[data-testid="rental_application_billing_address_input"]') ? document.querySelector('[data-testid="rental_application_billing_address_input"]').value : 'none';
+            var billingAptSuite = document.querySelector('[data-testid="rental_application_billing_apt_suite_input"]') ? document.querySelector('[data-testid="rental_application_billing_apt_suite_input"]').value : 'none';
+
             // Calculate lead time in hours
             var leadTime = calculateLeadTime(fromDate);
-          
+
             // Extract the "From Date" and "Until Date" using the correct data-testid attributes
             var fromDateElem = document.querySelector('[data-testid="rental_order_pickup_date_time"] .text-xl');
             var untilDateElem = document.querySelector('[data-testid="rental_order_dropoff_date_time"] .text-xl');
@@ -149,7 +157,13 @@ function attachFormSubmitListener() {
                 'user_type': userType,  // New parameter
                 'comments': comments,
                 'lead_time_hours': leadTime, // Lead time in hours
-                'rental_duration_hours': rentalDuration  // Rental duration in hours
+                'rental_duration_hours': rentalDuration,  // Rental duration in hours
+                'company_name': companyName,
+                'dot_number': dotNumber,
+                'physical_address': physicalAddress,
+                'physical_apt_suite': physicalAptSuite,
+                'billing_address': billingAddress,
+                'billing_apt_suite': billingAptSuite
             }, getRyderEventProps()));
 
             // Watch the page for the appearance of rental_order_id element
@@ -158,77 +172,186 @@ function attachFormSubmitListener() {
     });
 }
 
-// Function to watch for rental_order_id and send a new event
+// Function to watch for rental order confirmation page
 function watchForRentalOrderConfirmation() {
-    // Create an observer instance to monitor DOM changes
-    var observer = new MutationObserver(function(mutations) {
-        mutations.forEach(function(mutation) {
-            // Check if rental_order_id element appears and if the event hasn't already been sent
-            if (!confirmationEventSent) {
-                var rentalOrderIdElement = document.querySelector('[data-testid="rental_order_id"]');
-                if (rentalOrderIdElement) {
-                    var rentalOrderId = rentalOrderIdElement.innerText;
+    // Since order ID is now in URL, check immediately and set up URL change detection
+    checkForConfirmationPage();
 
-                    // Use the previously stored quantity input value from the data layer
-                    var pendingReservations = quantityInputValue;
+    // Set up listeners for URL changes (for SPA navigation)
+    setupUrlChangeListeners();
 
-                    // Push the event to the data layer when rental_order_id appears
-                    dataLayer.push(Object.assign({
-                        'event': 'create_rental_order_activity',
-                        'element_click': 'rental_order_confirmation_page',
-                        'step': 'rental_order_confirmation_page',
-                        'user_type': userType,  // New parameter
-                        'rental_order_number': rentalOrderId,
-                        'pending_reservations': pendingReservations
-                    }, getRyderEventProps()));
-                  
-                    dataLayer.push(Object.assign({
-                        'event': 'order_confirmation',
-                        'rental_order_number': rentalOrderId
-                    }, getRyderEventProps()));
-                   
-                    //Refresh Medallia survey to solve client-side routing issues
-                    window.KAMPYLE_ONSITE_SDK.updatePageView()
-                    console.log("Medallia script being called for refresh")
+    // Also keep a fallback periodic check for URL-based detection
+    var checkCount = 0;
+    var maxChecks = 40; // Check for up to 20 seconds (500ms * 40) to account for navigation time
+    var fallbackInterval = setInterval(function() {
+        checkCount++;
 
-                    // Mark that the confirmation event has been sent
-                    confirmationEventSent = true;
+        if (confirmationEventSent || checkCount >= maxChecks) {
+            clearInterval(fallbackInterval);
+            return;
+        }
 
-                    // Stop observing once the rental order is found
-                    observer.disconnect();
-
-                    // Now also attach listener for the "Create an account" button
-                    attachCreateAccountButtonListener(rentalOrderId, pendingReservations);
-                }
-            }
-        });
-    });
-
-    // Start observing the entire document for DOM changes
-    observer.observe(document.body, { childList: true, subtree: true });
+        checkForConfirmationPage();
+    }, 500);
 }
 
-// Function to listen for the "View Rates" button click
-function attachViewRatesButtonListener() {
-    document.addEventListener('click', function(event) {
-        var element = event.target.closest('[data-testid="rental_order_view_rates_button"]');
-        if (element) {
-            var comments = document.querySelector('[data-testid="rental_order_leave_comments"]') ? document.querySelector('[data-testid="rental_order_leave_comments"]').value : 'none';
-            var pickupDateFromDOM = document.querySelector('[data-testid="rental_order_pickup_date_time"] .text-xl') ? document.querySelector('[data-testid="rental_order_pickup_date_time"] .text-xl').innerText : 'none';
-            var dropoffDateFromDOM = document.querySelector('[data-testid="rental_order_dropoff_date_time"] .text-xl') ? document.querySelector('[data-testid="rental_order_dropoff_date_time"] .text-xl').innerText : 'none';
+// Function to check if we're currently on the confirmation page
+function checkForConfirmationPage() {
+    var currentUrl = window.location.href;
+    var isConfirmationPage = currentUrl.includes('/confirmation') || currentUrl.includes('/orders/confirmation');
 
-            dataLayer.push(Object.assign({
-                'event': 'create_rental_order_activity',
-                'element_click': 'rental_order_view_rates_button',
-                'step': 'rental_order_review_order_page',
-                'comments': comments,
-                'lead_time_hours': calculateLeadTime(fromDate),
-                'rental_duration_hours': calculateRentalDuration(pickupDateFromDOM, dropoffDateFromDOM),
-                'user_id': window.oktaUid,
-                'user_type': userType
-            }, getRyderEventProps()));
+    if (isConfirmationPage && !confirmationEventSent) {
+        var rentalOrderIdElement = findRentalOrderElement();
+        if (rentalOrderIdElement) {
+            sendConfirmationEvent(rentalOrderIdElement);
+            return true;
         }
-    }, true);
+    }
+    return false;
+}
+
+// Function to set up URL change listeners for SPA navigation
+function setupUrlChangeListeners() {
+    // Listen for popstate events (browser back/forward)
+    window.addEventListener('popstate', function() {
+        setTimeout(checkForConfirmationPage, 100); // Small delay to ensure URL has updated
+    });
+
+    // Listen for pushState/replaceState (programmatic navigation)
+    var originalPushState = history.pushState;
+    var originalReplaceState = history.replaceState;
+
+    history.pushState = function() {
+        originalPushState.apply(history, arguments);
+        setTimeout(checkForConfirmationPage, 100);
+    };
+
+    history.replaceState = function() {
+        originalReplaceState.apply(history, arguments);
+        setTimeout(checkForConfirmationPage, 100);
+    };
+
+    // Also listen for hash changes
+    window.addEventListener('hashchange', function() {
+        setTimeout(checkForConfirmationPage, 100);
+    });
+}
+
+// Helper function to extract rental order ID from URL or DOM elements
+function findRentalOrderElement() {
+    // First, try to extract order ID from URL path
+    var orderIdFromUrl = extractOrderIdFromUrl();
+    if (orderIdFromUrl) {
+        // Create a virtual element to return the order ID
+        return {
+            innerText: orderIdFromUrl,
+            trim: function() { return orderIdFromUrl; }
+        };
+    }
+
+    // Fallback to DOM element search (legacy support)
+    var selectors = [
+        '[data-testid="rental_order_id"]',
+        '[data-testid="rental-order-id"]',
+        '[data-testid*="rental_order"]',
+        '[data-testid*="rental-order"]',
+        '[data-testid*="order_id"]',
+        '[data-testid*="order-id"]',
+        '.rental-order-id',
+        '#rental-order-id',
+        '[class*="rental-order"]',
+        '[id*="rental-order"]',
+        '[class*="order-id"]',
+        '[id*="order-id"]'
+    ];
+
+    for (var i = 0; i < selectors.length; i++) {
+        var element = document.querySelector(selectors[i]);
+        if (element && element.innerText && element.innerText.trim()) {
+            return element;
+        }
+    }
+
+    return null;
+}
+
+// Helper function to extract order ID from URL patterns
+function extractOrderIdFromUrl() {
+    var pathname = window.location.pathname;
+
+    // Pattern 1: /orders/confirmation/12345
+    var confirmationMatch = pathname.match(/\/orders\/confirmation\/(\d+)/);
+    if (confirmationMatch) {
+        return confirmationMatch[1];
+    }
+
+    // Pattern 2: /confirmation/12345
+    var confirmationMatch2 = pathname.match(/\/confirmation\/(\d+)/);
+    if (confirmationMatch2) {
+        return confirmationMatch2[1];
+    }
+
+    // Pattern 3: URL parameters like ?orderId=12345 or ?order_id=12345
+    var urlParams = new URLSearchParams(window.location.search);
+    var orderIdParam = urlParams.get('orderId') || urlParams.get('order_id') || urlParams.get('orderID');
+    if (orderIdParam) {
+        return orderIdParam;
+    }
+
+    // Pattern 4: Hash-based routing like #/orders/12345
+    var hash = window.location.hash;
+    if (hash) {
+        var hashMatch = hash.match(/\/orders\/(\d+)/);
+        if (hashMatch) {
+            return hashMatch[1];
+        }
+    }
+
+    // Pattern 5: Any number at the end of the path (fallback)
+    var endNumberMatch = pathname.match(/\/(\d+)\/?$/);
+    if (endNumberMatch && endNumberMatch[1].length >= 4) { // At least 4 digits
+        return endNumberMatch[1];
+    }
+
+    return null;
+}
+
+// Helper function to send confirmation event
+function sendConfirmationEvent(rentalOrderIdElement) {
+    if (confirmationEventSent) return;
+
+    var rentalOrderId = rentalOrderIdElement.innerText.trim();
+
+    // Use the previously stored quantity input value from the data layer
+    var pendingReservations = quantityInputValue;
+
+    // Push the event to the data layer when rental_order_id appears
+    dataLayer.push(Object.assign({
+        'event': 'create_rental_order_activity',
+        'element_click': 'rental_order_confirmation_page',
+        'step': 'rental_order_confirmation_page',
+        'user_type': userType,  // New parameter
+        'rental_order_number': rentalOrderId,
+        'pending_reservations': pendingReservations
+    }, getRyderEventProps()));
+
+    dataLayer.push(Object.assign({
+        'event': 'order_confirmation',
+        'rental_order_number': rentalOrderId
+    }, getRyderEventProps()));
+
+    //Refresh Medallia survey to solve client-side routing issues
+    if (window.KAMPYLE_ONSITE_SDK && window.KAMPYLE_ONSITE_SDK.updatePageView) {
+        window.KAMPYLE_ONSITE_SDK.updatePageView();
+    }
+
+    // Mark that the confirmation event has been sent
+    confirmationEventSent = true;
+
+    // Now also attach listener for the "Create an account" button
+    if (typeof attachCreateAccountButtonListener === 'function') {
+        attachCreateAccountButtonListener(rentalOrderId, pendingReservations);
+    }
 }
 
 // Utility function to merge window.ryder properties (truncated to 40 chars) and add experiments string of full names
@@ -247,17 +370,14 @@ function getRyderEventProps() {
 // Attach the event listeners when the DOM is fully loaded
 document.addEventListener('DOMContentLoaded', function() {
     attachFormSubmitListener();
-    attachViewRatesButtonListener();
 });
-  
+
 window.addEventListener('load', function() {
     attachFormSubmitListener();
-    attachViewRatesButtonListener();
 });
 
 // Also check if the document is already loaded
 if (document.readyState === 'complete') {
     attachFormSubmitListener();
-    attachViewRatesButtonListener();
 }
 </script>
