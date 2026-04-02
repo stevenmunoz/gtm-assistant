@@ -15,6 +15,8 @@ function attachEventListeners() {
         dataTestId === 'nav_privacy_policy' || 
         dataTestId === 'nav_terms_of_use' || 
         dataTestId === 'nav_view_vehicles' ||
+        dataTestId === 'register_button' ||
+        dataTestId === 'login_button' ||
         (element.tagName.toLowerCase() === 'a' && element.href && element.href.indexOf('/rentals') !== -1 && element.textContent.trim() === 'Rental Agreements')
       ) {
 
@@ -55,6 +57,14 @@ function attachEventListeners() {
           elementClick = 'main_menu_nav_vehicles';
           eventCategory = 'main_menu_activity';
           break;
+        case 'register_button':
+          elementClick = 'main_menu_register_button';
+          eventCategory = 'main_menu_activity';
+          break;
+        case 'login_button':
+          elementClick = 'main_menu_login_button';
+          eventCategory = 'main_menu_activity';
+          break;
         default:
           // Handle Rental Agreements link without data-testid
           if (element.tagName.toLowerCase() === 'a' && element.href && element.href.indexOf('/rentals') !== -1 && element.textContent.trim() === 'Rental Agreements') {
@@ -71,7 +81,8 @@ function attachEventListeners() {
           'event': eventCategory,
           'dataTestId': dataTestId,
           'element': element.tagName,
-          'element_click': elementClick
+          'element_click': elementClick,
+          'okta_id': window.oktaUid || ''
         };
 
         dataLayer.push(dataLayerObject);
