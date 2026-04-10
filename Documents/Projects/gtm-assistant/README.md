@@ -31,6 +31,10 @@ Core tracking scripts for user interactions and events.
 - `lp-events.js` - Landing page event tracking
 - `okta-activate-tracking.js` - Okta activation tracking
 
+#### analytics/navigation/
+Navigation interaction tracking scripts.
+- `language-selector-tracking.js` - Language selector tracking
+
 #### analytics/rental-agreements/
 Scripts for tracking rental agreement interactions.
 - `consumer-rental-application.js` - Consumer rental agreement tracking
@@ -50,6 +54,11 @@ Navigation-related UI modifications.
 #### ui-modifications/forms/
 Form-related UI modifications.
 - `modify-length-comments.js` - Modifies comment field length constraints
+- `update-org-request-phone-number.js` - Updates phone number on the Request Access to an Existing Organization page
+
+#### ui-modifications/modals/
+Modal-related UI modifications.
+- `reservation-login-modal-copy-change.js` - Modifies copy in the reservation login modal
 
 #### ui-modifications/buttons/
 Button-related UI modifications.
@@ -110,7 +119,12 @@ Data files and configuration.
 Project documentation.
 - `GTM_Implementation_Guide.md` - GTM implementation guide
 - `GTM_Medallia_User_Context_PRD.md` - Medallia user context PRD
+- `GTM_Event_Parameter_Descriptions.md` - Event parameter descriptions
 - `HttpOnly_Cookie_Issue_Solution.md` - Cookie issue documentation
+- `ECID_Cross_Domain_Tracking_PRD.md` - ECID cross-domain tracking PRD
+- `Email_Campaign_Tracking_Guide.md` - Email campaign tracking guide
+- `EMAIL_TRACKING_QUICK_START.md` - Email tracking quick start
+- `Snowflake_Email_Campaign_Integration_PRD.md` - Snowflake email campaign integration PRD
 
 ## Usage
 
